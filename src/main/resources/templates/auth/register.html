@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: head(title='Register')">
+    <title>Banking System - Register</title>
+</head>
+<body>
+    <nav th:replace="layout :: navbar"></nav>
+    
+    <div th:fragment="content">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="card shadow-lg border-0 rounded-lg">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="text-center font-weight-light my-2">Create Account</h3>
+                        </div>
+                        <div class="card-body">
+                            <form th:action="@{/register}" method="post" th:object="${user}">
+                                <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
+                                    <p th:each="err : ${#fields.errors('*')}" th:text="${err}"></p>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3 mb-md-0">
+                                            <input class="form-control" id="firstName" type="text" th:field="*{firstName}" placeholder="Enter your first name" required />
+                                            <label for="firstName">First name</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input class="form-control" id="lastName" type="text" th:field="*{lastName}" placeholder="Enter your last name" required />
+                                            <label for="lastName">Last name</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <input class="form-control" id="email" type="email" th:field="*{email}" placeholder="name@example.com" required />
+                                    <label for="email">Email address</label>
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <input class="form-control" id="username" type="text" th:field="*{username}" placeholder="Username" required />
+                                    <label for="username">Username</label>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3 mb-md-0">
+                                            <input class="form-control" id="password" type="password" th:field="*{password}" placeholder="Create a password" required />
+                                            <label for="password">Password</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3 mb-md-0">
+                                            <input class="form-control" id="confirmPassword" type="password" name="confirmPassword" placeholder="Confirm password" required />
+                                            <label for="confirmPassword">Confirm Password</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <input class="form-control" id="phoneNumber" type="tel" th:field="*{phoneNumber}" placeholder="Phone number" required />
+                                    <label for="phoneNumber">Phone Number</label>
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <input class="form-control" id="address" type="text" th:field="*{address}" placeholder="Address" required />
+                                    <label for="address">Address</label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" id="terms" type="checkbox" required />
+                                    <label class="form-check-label" for="terms">
+                                        I agree to the <a href="#" class="text-primary">terms and conditions</a>
+                                    </label>
+                                </div>
+                                
+                                <div class="mt-4 mb-0">
+                                    <div class="d-grid">
+                                        <button class="btn btn-primary btn-block" type="submit">Create Account</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="card-footer text-center py-3">
+                            <div class="small">
+                                <a th:href="@{/login}" class="text-primary">Have an account? Go to login</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer th:replace="layout :: footer"></footer>
+    
+    <script th:replace="layout :: scripts"></script>
+</body>
+</html>

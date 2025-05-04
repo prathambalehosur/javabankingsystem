@@ -1,0 +1,311 @@
+/* Main Styles for Banking System */
+
+:root {
+  --primary-color: #0d6efd;
+  --secondary-color: #6c757d;
+  --success-color: #198754;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #0dcaf0;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+  --body-bg: #f8f9fa;
+  --card-bg: #ffffff;
+  --text-color: #212529;
+  --border-color: #dee2e6;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--body-bg);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Card styling with subtle shadow and rounded corners */
+.card {
+  border-radius: 10px;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  border: none;
+  background-color: var(--card-bg);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px var(--shadow-color);
+}
+
+/* Dashboard cards */
+.dashboard-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-card .card-body {
+  flex: 1;
+}
+
+.dashboard-card .card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.dashboard-card .card-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+/* Account card styling */
+.account-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  background: linear-gradient(135deg, var(--primary-color), #0a58ca);
+  color: white;
+  margin-bottom: 20px;
+}
+
+.account-card .card-number {
+  letter-spacing: 2px;
+  font-size: 1.2rem;
+}
+
+.account-card .card-balance {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.account-card .card-type {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.account-card .card-actions {
+  margin-top: 20px;
+}
+
+/* Transaction list styling */
+.transaction-item {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s ease;
+}
+
+.transaction-item:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+.transaction-item .transaction-amount.deposit {
+  color: var(--success-color);
+}
+
+.transaction-item .transaction-amount.withdrawal {
+  color: var(--danger-color);
+}
+
+.transaction-item .transaction-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin-right: 15px;
+}
+
+.transaction-icon.deposit {
+  background-color: var(--success-color);
+}
+
+.transaction-icon.withdrawal {
+  background-color: var(--danger-color);
+}
+
+.transaction-icon.transfer {
+  background-color: var(--primary-color);
+}
+
+.transaction-icon.payment {
+  background-color: var(--warning-color);
+}
+
+/* Form styling */
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-label {
+  font-weight: 500;
+}
+
+/* Button styling */
+.btn {
+  border-radius: 5px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+/* Animation for loading */
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-width: 0.2em;
+}
+
+/* Notification badge */
+.badge {
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
+}
+
+/* Chart container */
+.chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-card .card-value {
+    font-size: 1.5rem;
+  }
+  
+  .account-card .card-balance {
+    font-size: 1.5rem;
+  }
+  
+  .account-card .card-number {
+    font-size: 1rem;
+  }
+}
+
+/* Login and Registration pages */
+.auth-container {
+  max-width: 450px;
+  margin: 50px auto;
+}
+
+.auth-card {
+  padding: 30px;
+}
+
+.auth-card .card-title {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--primary-color);
+}
+
+.auth-card .form-group {
+  margin-bottom: 20px;
+}
+
+.auth-card .btn-primary {
+  width: 100%;
+  padding: 12px;
+}
+
+.auth-card .auth-footer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* Profile page */
+.profile-header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 30px 0;
+  border-radius: 10px;
+  margin-bottom: 30px;
+}
+
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px;
+  font-size: 3rem;
+  color: var(--primary-color);
+}
+
+.profile-name {
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.profile-info {
+  text-align: center;
+}
+
+/* Loan calculator */
+.loan-calculator {
+  background-color: var(--light-color);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.loan-result {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.loan-result .result-amount {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--light-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0a58ca;
+}

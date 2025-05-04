@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: head(title='Welcome')">
+    <title>Banking System - Welcome</title>
+</head>
+<body>
+    <nav th:replace="layout :: navbar"></nav>
+    
+    <div th:fragment="content">
+        <!-- Hero Section -->
+        <section class="py-5 text-center container">
+            <div class="row py-lg-5">
+                <div class="col-lg-8 col-md-10 mx-auto">
+                    <h1 class="fw-bold">Welcome to the Banking System</h1>
+                    <p class="lead text-muted">Your secure and reliable banking partner with advanced features and modern interface.</p>
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+                        <a href="/register" class="btn btn-primary btn-lg px-4 gap-3">Get Started</a>
+                        <a href="/login" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="py-5 bg-light">
+            <div class="container">
+                <h2 class="text-center mb-5">Our Features</h2>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Advanced Security</h5>
+                                <p class="card-text">Biometric authentication, two-factor verification, and state-of-the-art encryption to keep your money safe.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-exchange-alt fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Easy Transfers</h5>
+                                <p class="card-text">Transfer money between accounts instantly with just a few clicks. Schedule recurring payments for bills.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Financial Insights</h5>
+                                <p class="card-text">Track your spending habits, visualize your finances, and get personalized recommendations.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section class="py-5 bg-primary text-white">
+            <div class="container text-center">
+                <h2 class="mb-4">Ready to experience modern banking?</h2>
+                <a href="/register" class="btn btn-light btn-lg">Open an Account Today</a>
+            </div>
+        </section>
+    </div>
+
+    <footer th:replace="layout :: footer"></footer>
+    
+    <script th:replace="layout :: scripts"></script>
+</body>
+</html>
