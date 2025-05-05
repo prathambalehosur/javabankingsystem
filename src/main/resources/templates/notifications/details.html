@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking System - Notification Details</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        .notification-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        .notification-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+        .notification-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .notification-type-transaction { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; }
+        .notification-type-security { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
+        .notification-type-account { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
+        .notification-type-alert { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-landmark me-2"></i>Banking System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/accounts">
+                            <i class="fas fa-wallet me-1"></i>Accounts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/transactions">
+                            <i class="fas fa-exchange-alt me-1"></i>Transactions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/loans">
+                            <i class="fas fa-hand-holding-usd me-1"></i>Loans
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/notifications">
+                            <i class="fas fa-bell me-1"></i>Notifications
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile">
+                            <i class="fas fa-user me-1"></i><span th:text="${user != null ? user.username : 'Profile'}">Profile</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-bell me-2 text-primary"></i>Notification Details
+            </h1>
+            <a href="/notifications" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Notifications
+            </a>
+        </div>
+        
+        <div th:if="${notification == null}" class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>Notification not found
+        </div>
+        
+        <div th:if="${notification != null}" class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card notification-card">
+                    <div class="card-body p-4">
+                        <!-- Notification Header -->
+                        <div class="notification-header d-flex align-items-center mb-4">
+                            <div th:class="${'notification-icon me-3 notification-type-' + notification.type.name().toLowerCase()}">
+                                <i th:class="${'fas ' + 
+                                             (notification.type.name() == 'TRANSACTION' ? 'fa-money-bill-wave' : 
+                                              notification.type.name() == 'SECURITY' ? 'fa-shield-alt' : 
+                                              notification.type.name() == 'ACCOUNT' ? 'fa-wallet' : 
+                                              notification.type.name() == 'ALERT' ? 'fa-exclamation-triangle' : 'fa-bell')}">
+                                </i>
+                            </div>
+                            <div>
+                                <h3 class="mb-1" th:text="${notification.title}">Notification Title</h3>
+                                <p class="text-muted mb-0">
+                                    <i class="far fa-clock me-1"></i>
+                                    <span th:text="${#temporals.format(notification.timestamp, 'MMMM d, yyyy h:mm a')}">May 7, 2025 4:45 PM</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Notification Content -->
+                        <div class="notification-content mb-4">
+                            <p class="lead" th:text="${notification.message}">Notification message goes here...</p>
+                            
+                            <!-- Additional details based on notification type -->
+                            <div th:if="${notification.type.name() == 'TRANSACTION'}" class="card bg-light mt-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Transaction Details</h5>
+                                    <p class="card-text">View your transaction history for more details.</p>
+                                    <a href="/transactions" class="btn btn-primary">
+                                        <i class="fas fa-exchange-alt me-2"></i>Go to Transactions
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div th:if="${notification.type.name() == 'ACCOUNT'}" class="card bg-light mt-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Account Details</h5>
+                                    <p class="card-text">View your account details for more information.</p>
+                                    <a href="/accounts" class="btn btn-primary">
+                                        <i class="fas fa-wallet me-2"></i>Go to Accounts
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div th:if="${notification.type.name() == 'SECURITY'}" class="card bg-light mt-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Security Information</h5>
+                                    <p class="card-text">Review your security settings to ensure your account is protected.</p>
+                                    <a href="/profile/security" class="btn btn-primary">
+                                        <i class="fas fa-shield-alt me-2"></i>Security Settings
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div th:if="${notification.type.name() == 'ALERT'}" class="card bg-light mt-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Alert Information</h5>
+                                    <p class="card-text">This alert requires your attention. Please review the details.</p>
+                                    <a href="/dashboard" class="btn btn-primary">
+                                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-center gap-3 mt-4">
+                            <a href="#" class="btn btn-outline-secondary">
+                                <i class="fas fa-envelope me-2"></i>Email This Notification
+                            </a>
+                            <form th:action="@{/notifications/{id}/delete(id=${notification.id})}" method="post" onsubmit="return confirm('Are you sure you want to delete this notification?');">
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="fas fa-trash-alt me-2"></i>Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-landmark me-2"></i>Banking System</h5>
+                    <p>A comprehensive banking solution for all your financial needs.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2025 Banking System. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

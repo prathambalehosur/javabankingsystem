@@ -8,6 +8,8 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "accounts")
@@ -49,6 +51,23 @@ public class Account {
     
     @Column(name = "minimum_balance")
     private BigDecimal minimumBalance;
+    
+    @OneToMany(mappedBy = "sourceAccount", fetch = FetchType.LAZY)
+    private List<Transaction> sourceTransactions;
+    
+    @OneToMany(mappedBy = "destinationAccount", fetch = FetchType.LAZY)
+    private List<Transaction> destinationTransactions;
+    
+    public List<Transaction> getTransactions() {
+        List<Transaction> allTransactions = new ArrayList<>();
+        if (sourceTransactions != null) {
+            allTransactions.addAll(sourceTransactions);
+        }
+        if (destinationTransactions != null) {
+            allTransactions.addAll(destinationTransactions);
+        }
+        return allTransactions;
+    }
     
     public enum AccountType {
         SAVINGS,

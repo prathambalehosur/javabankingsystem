@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking System - Transaction Details</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        .detail-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        .transaction-badge {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+        }
+        .transaction-details dt {
+            font-weight: 500;
+            color: #6c757d;
+        }
+        .transaction-details dd {
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-landmark me-2"></i>Banking System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/accounts">
+                            <i class="fas fa-wallet me-1"></i>Accounts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/transactions">
+                            <i class="fas fa-exchange-alt me-1"></i>Transactions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/loans">
+                            <i class="fas fa-hand-holding-usd me-1"></i>Loans
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile">
+                            <i class="fas fa-user me-1"></i><span th:text="${user != null ? user.username : 'Profile'}">Profile</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-receipt me-2 text-primary"></i>Transaction Details
+            </h1>
+            <a href="/transactions" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Transactions
+            </a>
+        </div>
+        
+        <div th:if="${transaction == null}" class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>Transaction not found
+        </div>
+        
+        <div th:if="${transaction != null}" class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card detail-card">
+                    <div class="card-body p-4">
+                        <!-- Transaction Header -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h3 class="mb-0" th:text="${transaction.description}">Transaction Description</h3>
+                                <p class="text-muted mb-0" th:text="${#temporals.format(transaction.transactionDate, 'MMMM d, yyyy h:mm a')}">May 7, 2025 4:45 PM</p>
+                            </div>
+                            <div>
+                                <span th:if="${transaction != null}" 
+                                      th:class="${'transaction-badge badge ' + 
+                                                 (transaction.transactionType.name() == 'DEPOSIT' ? 'bg-success' : 
+                                                  transaction.transactionType.name() == 'WITHDRAWAL' ? 'bg-danger' : 
+                                                  transaction.transactionType.name() == 'TRANSFER' ? 'bg-primary' : 
+                                                  transaction.transactionType.name() == 'PAYMENT' ? 'bg-warning' : 'bg-secondary')}"
+                                      th:text="${transaction.transactionType}">
+                                    Transaction Type
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Transaction Amount -->
+                        <div class="text-center my-4">
+                            <h1 th:class="${'display-4 ' + 
+                                           (transaction.transactionType.name() == 'DEPOSIT' ? 'text-success' : 
+                                            transaction.transactionType.name() == 'WITHDRAWAL' ? 'text-danger' : 
+                                            transaction.transactionType.name() == 'TRANSFER' ? 'text-primary' : 
+                                            transaction.transactionType.name() == 'PAYMENT' ? 'text-warning' : 'text-dark')}">
+                                <span th:text="${transaction.transactionType.name() == 'DEPOSIT' ? '+$' : 
+                                                transaction.transactionType.name() == 'WITHDRAWAL' ? '-$' : 
+                                                transaction.transactionType.name() == 'PAYMENT' ? '-$' : '$'}"></span>
+                                <span th:text="${#numbers.formatDecimal(transaction.amount, 1, 'COMMA', 2, 'POINT')}">500.00</span>
+                            </h1>
+                            <p class="text-muted" th:if="${transaction.status != null}" th:text="${transaction.status}">Completed</p>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Transaction Details -->
+                        <dl class="row transaction-details">
+                            <dt class="col-sm-4">Transaction ID</dt>
+                            <dd class="col-sm-8" th:text="${transaction.transactionNumber}">TRX-123456789</dd>
+                            
+                            <dt class="col-sm-4">Reference</dt>
+                            <dd class="col-sm-8" th:text="${transaction.referenceNumber}">Internal Transfer</dd>
+                            
+                            <dt class="col-sm-4">Type</dt>
+                            <dd class="col-sm-8">
+                                <span th:class="${'badge ' + 
+                                                 (transaction.transactionType.name() == 'DEPOSIT' ? 'bg-success' : 
+                                                  transaction.transactionType.name() == 'WITHDRAWAL' ? 'bg-danger' : 
+                                                  transaction.transactionType.name() == 'TRANSFER' ? 'bg-primary' : 
+                                                  transaction.transactionType.name() == 'PAYMENT' ? 'bg-warning' : 'bg-secondary')}"
+                                      th:text="${transaction.transactionType}">
+                                    Transaction Type
+                                </span>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                <span th:class="${'badge ' + 
+                                                 (transaction.status.name() == 'COMPLETED' ? 'bg-success' : 
+                                                  transaction.status.name() == 'PENDING' ? 'bg-warning' : 
+                                                  transaction.status.name() == 'FAILED' ? 'bg-danger' : 
+                                                  transaction.status.name() == 'CANCELLED' ? 'bg-secondary' : 'bg-info')}"
+                                      th:text="${transaction.status}">
+                                    Transaction Status
+                                </span>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Date & Time</dt>
+                            <dd class="col-sm-8" th:text="${#temporals.format(transaction.transactionDate, 'MMMM d, yyyy h:mm a')}">May 7, 2025 4:45 PM</dd>
+                        </dl>
+                        
+                        <hr>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-center gap-3 mt-4">
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="fas fa-print me-2"></i>Print Receipt
+                            </a>
+                            <a href="#" class="btn btn-outline-secondary">
+                                <i class="fas fa-download me-2"></i>Download PDF
+                            </a>
+                            <a href="#" class="btn btn-outline-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Report Issue
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-landmark me-2"></i>Banking System</h5>
+                    <p>A comprehensive banking solution for all your financial needs.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2025 Banking System. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

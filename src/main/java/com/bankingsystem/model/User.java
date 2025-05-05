@@ -49,6 +49,9 @@ public class User {
     @Column(name = "phone_number")
     private String phoneNumber;
     
+    @Column(name = "address", length = 255)
+    private String address;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
@@ -62,6 +65,16 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
+    
+    // Explicit getter for enabled field to fix compilation errors
+    public boolean isEnabled() {
+        return enabled;
+    }
+    
+    // Explicit getter for password to fix compilation errors
+    public String getPassword() {
+        return password;
+    }
     
     @PrePersist
     protected void onCreate() {

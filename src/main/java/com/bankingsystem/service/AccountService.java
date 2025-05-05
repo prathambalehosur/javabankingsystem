@@ -24,7 +24,6 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
-    private final NotificationService notificationService;
     
     /**
      * Get all accounts for a user
@@ -53,70 +52,45 @@ public class AccountService {
      */
     @Transactional
     public Account createAccount(User user, AccountType accountType, BigDecimal initialDeposit) {
-        // Validate initial deposit
-        if (initialDeposit.compareTo(BigDecimal.ZERO) < 0) {
-            throw new RuntimeException("Initial deposit cannot be negative");
-        }
-        
-        // Set minimum balance based on account type
-        BigDecimal minimumBalance = BigDecimal.ZERO;
-        BigDecimal interestRate = BigDecimal.ZERO;
-        
-        switch (accountType) {
-            case SAVINGS:
-                minimumBalance = new BigDecimal("100.00");
-                interestRate = new BigDecimal("2.5");
-                break;
-            case CHECKING:
-                minimumBalance = new BigDecimal("50.00");
-                interestRate = new BigDecimal("0.5");
-                break;
-            case FIXED_DEPOSIT:
-                minimumBalance = new BigDecimal("1000.00");
-                interestRate = new BigDecimal("5.0");
-                break;
-            default:
-                throw new RuntimeException("Invalid account type");
-        }
-        
-        // Check if initial deposit meets minimum balance requirement
-        if (initialDeposit.compareTo(minimumBalance) < 0) {
-            throw new RuntimeException("Initial deposit must be at least " + minimumBalance);
-        }
-        
         // Generate account number
         String accountNumber = generateAccountNumber();
         
-        // Create account
+        // Set default values based on account type
+        BigDecimal minimumBalance = BigDecimal.ZERO;
+        BigDecimal interestRate = BigDecimal.ZERO;
+        
+        if (accountType == AccountType.SAVINGS) {
+            minimumBalance = new BigDecimal("100.00");
+            interestRate = new BigDecimal("0.025"); // 2.5% annual interest
+        } else if (accountType == AccountType.CHECKING) {
+            minimumBalance = new BigDecimal("50.00");
+        }
+        
+        // Create new account
         Account account = new Account();
         account.setAccountNumber(accountNumber);
         account.setAccountType(accountType);
         account.setBalance(initialDeposit);
         account.setUser(user);
         account.setActive(true);
-        account.setMinimumBalance(minimumBalance);
-        account.setInterestRate(interestRate);
         
         Account savedAccount = accountRepository.save(account);
         
-        // Record initial deposit transaction
+        // Record initial deposit transaction if needed
         if (initialDeposit.compareTo(BigDecimal.ZERO) > 0) {
-            recordTransaction(
-                    null,
-                    savedAccount,
-                    TransactionType.DEPOSIT,
-                    initialDeposit,
-                    "Initial deposit",
-                    TransactionStatus.COMPLETED
-            );
+            // Create transaction record
+            Transaction transaction = new Transaction();
+            transaction.setTransactionNumber(generateTransactionNumber());
+            transaction.setTransactionType(TransactionType.DEPOSIT);
+            transaction.setAmount(initialDeposit);
+            transaction.setDescription("Initial deposit");
+            transaction.setSourceAccount(null);
+            transaction.setDestinationAccount(savedAccount);
+            transaction.setTransactionDate(LocalDateTime.now());
+            transaction.setStatus(TransactionStatus.COMPLETED);
+            
+            transactionRepository.save(transaction);
         }
-        
-        // Send notification
-        notificationService.sendTransactionNotification(
-                user,
-                transactionRepository.findByTargetAccount(savedAccount).get(0),
-                "New " + accountType + " account created with initial deposit of $" + initialDeposit
-        );
         
         return savedAccount;
     }
@@ -171,13 +145,6 @@ public class AccountService {
                 TransactionStatus.COMPLETED
         );
         
-        // Send notification
-        notificationService.sendTransactionNotification(
-                account.getUser(),
-                transaction,
-                "Deposit of $" + amount + " to account " + accountNumber
-        );
-        
         return transaction;
     }
     
@@ -214,22 +181,6 @@ public class AccountService {
                 "Withdrawal from account",
                 TransactionStatus.COMPLETED
         );
-        
-        // Send notification
-        notificationService.sendTransactionNotification(
-                account.getUser(),
-                transaction,
-                "Withdrawal of $" + amount + " from account " + accountNumber
-        );
-        
-        // Check if balance is low after withdrawal
-        if (account.getBalance().compareTo(account.getMinimumBalance().multiply(new BigDecimal("2"))) <= 0) {
-            notificationService.sendLowBalanceNotification(
-                    account.getUser(),
-                    accountNumber,
-                    account.getBalance()
-            );
-        }
         
         return transaction;
     }
@@ -276,30 +227,6 @@ public class AccountService {
                 TransactionStatus.COMPLETED
         );
         
-        // Send notifications
-        notificationService.sendTransactionNotification(
-                fromAccount.getUser(),
-                transaction,
-                "Transfer of $" + amount + " from account " + fromAccountNumber + " to account " + toAccountNumber
-        );
-        
-        if (!fromAccount.getUser().equals(toAccount.getUser())) {
-            notificationService.sendTransactionNotification(
-                    toAccount.getUser(),
-                    transaction,
-                    "Received transfer of $" + amount + " from account " + fromAccountNumber + " to account " + toAccountNumber
-            );
-        }
-        
-        // Check if balance is low after transfer
-        if (fromAccount.getBalance().compareTo(fromAccount.getMinimumBalance().multiply(new BigDecimal("2"))) <= 0) {
-            notificationService.sendLowBalanceNotification(
-                    fromAccount.getUser(),
-                    fromAccountNumber,
-                    fromAccount.getBalance()
-            );
-        }
-        
         return transaction;
     }
     
@@ -311,14 +238,6 @@ public class AccountService {
         Account account = getAccountByNumber(accountNumber);
         account.setActive(active);
         accountRepository.save(account);
-        
-        // Send notification
-        String status = active ? "activated" : "deactivated";
-        notificationService.sendTransactionNotification(
-                account.getUser(),
-                null,
-                "Account " + accountNumber + " has been " + status
-        );
     }
     
     /**
@@ -348,13 +267,6 @@ public class AccountService {
                     "Monthly interest",
                     TransactionStatus.COMPLETED
             );
-            
-            // Send notification
-            notificationService.sendTransactionNotification(
-                    account.getUser(),
-                    transaction,
-                    "Interest of $" + interest + " applied to account " + account.getAccountNumber()
-            );
         }
     }
     
@@ -363,7 +275,7 @@ public class AccountService {
      */
     private Transaction recordTransaction(
             Account sourceAccount,
-            Account targetAccount,
+            Account destinationAccount,
             TransactionType type,
             BigDecimal amount,
             String description,
@@ -374,7 +286,7 @@ public class AccountService {
         transaction.setTransactionType(type);
         transaction.setAmount(amount);
         transaction.setSourceAccount(sourceAccount);
-        transaction.setTargetAccount(targetAccount);
+        transaction.setDestinationAccount(destinationAccount);
         transaction.setDescription(description);
         transaction.setTransactionDate(LocalDateTime.now());
         transaction.setStatus(status);

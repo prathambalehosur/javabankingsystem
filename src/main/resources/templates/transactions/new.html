@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking System - New Transfer</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        .form-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        .recurring-options {
+            display: none;
+        }
+        #recurringCheckbox:checked ~ .recurring-options {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-landmark me-2"></i>Banking System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/accounts">
+                            <i class="fas fa-wallet me-1"></i>Accounts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/transactions">
+                            <i class="fas fa-exchange-alt me-1"></i>Transactions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/loans">
+                            <i class="fas fa-hand-holding-usd me-1"></i>Loans
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile">
+                            <i class="fas fa-user me-1"></i><span th:text="${user != null ? user.username : 'Profile'}">Profile</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-paper-plane me-2 text-primary"></i>New Transfer
+            </h1>
+            <a href="/transactions" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Transactions
+            </a>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card form-card">
+                    <div class="card-body p-4">
+                        <form th:action="@{/transactions/new}" th:object="${transferForm}" method="post" class="needs-validation" novalidate>
+                            
+                            <!-- Alert for errors -->
+                            <div class="alert alert-danger" th:if="${error != null}" role="alert">
+                                <i class="fas fa-exclamation-circle me-2"></i><span th:text="${error}">Error message</span>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="fromAccount" class="form-label">From Account</label>
+                                <select class="form-select" id="fromAccount" th:field="*{fromAccount}" required>
+                                    <option value="">Select source account</option>
+                                    <option th:each="account : ${accounts}" 
+                                            th:value="${account.accountNumber}" 
+                                            th:text="${account.name + ' (' + account.accountNumber + ') - $' + account.balance}">
+                                        Account Name (XXXX-1234) - $1,000.00
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a source account.
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="toAccount" class="form-label">To Account</label>
+                                <select class="form-select" id="toAccount" th:field="*{toAccount}" required>
+                                    <option value="">Select destination account</option>
+                                    <option value="external">External Account (Enter details below)</option>
+                                    <option th:each="account : ${accounts}" 
+                                            th:value="${account.accountNumber}" 
+                                            th:text="${account.name + ' (' + account.accountNumber + ')'}">
+                                        Account Name (XXXX-1234)
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a destination account.
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4 external-account-details" style="display: none;">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">External Account Details</h6>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label for="externalAccountName" class="form-label">Account Holder Name</label>
+                                                <input type="text" class="form-control" id="externalAccountName" name="externalAccountName">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="externalAccountNumber" class="form-label">Account Number</label>
+                                                <input type="text" class="form-control" id="externalAccountNumber" name="externalAccountNumber">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="externalBankName" class="form-label">Bank Name</label>
+                                                <input type="text" class="form-control" id="externalBankName" name="externalBankName">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="externalRoutingNumber" class="form-label">Routing Number</label>
+                                                <input type="text" class="form-control" id="externalRoutingNumber" name="externalRoutingNumber">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="amount" class="form-label">Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="amount" th:field="*{amount}" step="0.01" min="0.01" required>
+                                    <div class="invalid-feedback">
+                                        Please enter a valid amount.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" th:field="*{description}" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="recurringCheckbox" th:field="*{recurring}">
+                                    <label class="form-check-label" for="recurringCheckbox">
+                                        Set up recurring transfer
+                                    </label>
+                                </div>
+                                
+                                <div class="recurring-options mt-3 ps-4 border-start">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="recurringStartDate" class="form-label">Start Date</label>
+                                            <input type="date" class="form-control" id="recurringStartDate" th:field="*{recurringStartDate}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="recurringFrequency" class="form-label">Frequency</label>
+                                            <select class="form-select" id="recurringFrequency" th:field="*{recurringFrequency}">
+                                                <option value="WEEKLY">Weekly</option>
+                                                <option value="BIWEEKLY">Bi-weekly</option>
+                                                <option value="MONTHLY">Monthly</option>
+                                                <option value="QUARTERLY">Quarterly</option>
+                                                <option value="ANNUALLY">Annually</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-paper-plane me-2"></i>Send Transfer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-landmark me-2"></i>Banking System</h5>
+                    <p>A comprehensive banking solution for all your financial needs.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2025 Banking System. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Show/hide external account details based on selection
+        document.getElementById('toAccount').addEventListener('change', function() {
+            const externalDetails = document.querySelector('.external-account-details');
+            if (this.value === 'external') {
+                externalDetails.style.display = 'block';
+            } else {
+                externalDetails.style.display = 'none';
+            }
+        });
+        
+        // Form validation
+        (function () {
+            'use strict'
+            
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.querySelectorAll('.needs-validation')
+            
+            // Loop over them and prevent submission
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+</body>
+</html>

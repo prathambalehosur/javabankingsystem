@@ -20,11 +20,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     
     List<Transaction> findBySourceAccount(Account account);
     
-    List<Transaction> findByTargetAccount(Account account);
+    List<Transaction> findByDestinationAccount(Account account);
     
-    List<Transaction> findBySourceAccountOrTargetAccount(Account sourceAccount, Account targetAccount);
+    List<Transaction> findBySourceAccountOrDestinationAccount(Account sourceAccount, Account destinationAccount);
     
-    Page<Transaction> findBySourceAccountOrTargetAccount(Account sourceAccount, Account targetAccount, Pageable pageable);
+    Page<Transaction> findBySourceAccountOrDestinationAccount(Account sourceAccount, Account destinationAccount, Pageable pageable);
     
     List<Transaction> findByTransactionType(TransactionType transactionType);
     
@@ -35,6 +35,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findBySourceAccountAndTransactionDateBetween(
             Account account, LocalDateTime startDate, LocalDateTime endDate);
     
-    List<Transaction> findByTargetAccountAndTransactionDateBetween(
+    List<Transaction> findByDestinationAccountAndTransactionDateBetween(
             Account account, LocalDateTime startDate, LocalDateTime endDate);
 }

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking System - Create New Account</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-landmark me-2"></i>Banking System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/accounts">
+                            <i class="fas fa-wallet me-1"></i>Accounts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/transactions">
+                            <i class="fas fa-exchange-alt me-1"></i>Transactions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/loans">
+                            <i class="fas fa-hand-holding-usd me-1"></i>Loans
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile">
+                            <i class="fas fa-user me-1"></i><span th:text="${user != null ? user.username : 'Profile'}">Profile</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container py-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/accounts">Accounts</a></li>
+                <li class="breadcrumb-item active" aria-current="page">New Account</li>
+            </ol>
+        </nav>
+        
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-plus-circle me-2"></i>Create New Account
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/accounts/new}" method="post" th:object="${accountForm}">
+                            <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
+                                <p th:each="err : ${#fields.errors('*')}" th:text="${err}"></p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="accountName" class="form-label">Account Name</label>
+                                <input type="text" class="form-control" id="accountName" th:field="*{name}" placeholder="e.g. Primary Savings, Travel Fund, etc." required>
+                                <div class="form-text">Choose a name that helps you identify this account's purpose.</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="accountType" class="form-label">Account Type</label>
+                                <select class="form-select" id="accountType" th:field="*{type}" required>
+                                    <option value="">-- Select Account Type --</option>
+                                    <option value="SAVINGS">Savings Account</option>
+                                    <option value="CHECKING">Checking Account</option>
+                                    <option value="FIXED_DEPOSIT">Fixed Deposit</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="initialDeposit" class="form-label">Initial Deposit</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="initialDeposit" th:field="*{initialDeposit}" min="0" step="0.01" placeholder="0.00" required>
+                                </div>
+                                <div class="form-text">Minimum deposit: $100 for Savings, $50 for Checking, $1000 for Fixed Deposit</div>
+                            </div>
+                            
+                            <div id="fixedDepositOptions" class="mb-3 d-none">
+                                <label for="term" class="form-label">Term Period</label>
+                                <select class="form-select" id="term" th:field="*{term}">
+                                    <option value="">-- Select Term --</option>
+                                    <option value="6">6 Months (2.5% p.a.)</option>
+                                    <option value="12">1 Year (3.0% p.a.)</option>
+                                    <option value="24">2 Years (3.5% p.a.)</option>
+                                    <option value="36">3 Years (4.0% p.a.)</option>
+                                    <option value="60">5 Years (4.5% p.a.)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="jointAccount" th:field="*{jointAccount}">
+                                <label class="form-check-label" for="jointAccount">This is a joint account</label>
+                            </div>
+                            
+                            <div id="jointAccountOptions" class="mb-3 d-none">
+                                <label for="secondaryOwner" class="form-label">Secondary Account Holder</label>
+                                <input type="text" class="form-control" id="secondaryOwner" th:field="*{secondaryOwner}" placeholder="Username of secondary account holder">
+                                <div class="form-text">The user must be registered in the system</div>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="termsAgreement" required>
+                                <label class="form-check-label" for="termsAgreement">
+                                    I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">terms and conditions</a>
+                                </label>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-check-circle me-2"></i>Create Account
+                                </button>
+                                <a href="/accounts" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times-circle me-2"></i>Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Terms and Conditions Modal -->
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel">Account Terms and Conditions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>1. Account Opening and Maintenance</h6>
+                    <p>By opening an account, you agree to provide accurate information and maintain a minimum balance as required for your account type.</p>
+                    
+                    <h6>2. Fees and Charges</h6>
+                    <p>Various fees may apply to your account including maintenance fees, transaction fees, and penalty fees for falling below minimum balance requirements.</p>
+                    
+                    <h6>3. Interest Rates</h6>
+                    <p>Interest rates are subject to change without prior notice. For fixed deposit accounts, the interest rate remains fixed for the term period.</p>
+                    
+                    <h6>4. Joint Accounts</h6>
+                    <p>For joint accounts, both account holders have equal rights and responsibilities. Either account holder may make transactions without the consent of the other.</p>
+                    
+                    <h6>5. Account Closure</h6>
+                    <p>The bank reserves the right to close your account with reasonable notice if it is misused or maintained improperly.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-landmark me-2"></i>Banking System</h5>
+                    <p>A comprehensive banking solution for all your financial needs.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2025 Banking System. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Show/hide fixed deposit options based on account type
+        document.getElementById('accountType').addEventListener('change', function() {
+            const fixedDepositOptions = document.getElementById('fixedDepositOptions');
+            if (this.value === 'FIXED_DEPOSIT') {
+                fixedDepositOptions.classList.remove('d-none');
+            } else {
+                fixedDepositOptions.classList.add('d-none');
+            }
+        });
+        
+        // Show/hide joint account options
+        document.getElementById('jointAccount').addEventListener('change', function() {
+            const jointAccountOptions = document.getElementById('jointAccountOptions');
+            if (this.checked) {
+                jointAccountOptions.classList.remove('d-none');
+            } else {
+                jointAccountOptions.classList.add('d-none');
+            }
+        });
+    </script>
+</body>
+</html>

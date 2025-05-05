@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Loan Eligibility Calculator - Banking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">Loan Eligibility Calculator</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="eligibilityForm">
+                            <div class="mb-3">
+                                <label for="income" class="form-label">Monthly Income</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="income" 
+                                           step="0.01" min="0" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="existingEmi" class="form-label">Existing EMI Obligations</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="existingEmi" 
+                                           step="0.01" min="0" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="loanType" class="form-label">Desired Loan Type</label>
+                                <select class="form-select" id="loanType" name="loanType" required>
+                                    <option value="">Select Loan Type</option>
+                                    <option th:each="type : ${loanTypes}" th:value="${type}" th:text="${type}"></option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-calculator"></i> Calculate Eligibility
+                            </button>
+                        </form>
+
+                        <div class="mt-4">
+                            <h4>Results</h4>
+                            <div class="border p-3 rounded">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Maximum Eligible Amount:</strong> <span id="eligibleAmount">-</span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Maximum Monthly EMI:</strong> <span id="maxEmi">-</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('eligibilityForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const income = parseFloat(document.getElementById('income').value);
+            const existingEmi = parseFloat(document.getElementById('existingEmi').value);
+            const loanType = document.getElementById('loanType').value;
+
+            if (isNaN(income) || isNaN(existingEmi) || !loanType) {
+                alert('Please enter valid numbers and select a loan type');
+                return;
+            }
+
+            fetch(`/loans/check-eligibility?income=${income}&existingEmi=${existingEmi}&loanType=${loanType}`)
+                .then(response => response.text())
+                .then(eligibleAmount => {
+                    const amount = parseFloat(eligibleAmount);
+                    const maxEmi = income * 0.5 - existingEmi;
+
+                    document.getElementById('eligibleAmount').textContent = `$${amount.toFixed(2)}`;
+                    document.getElementById('maxEmi').textContent = `$${maxEmi.toFixed(2)}`;
+                })
+                .catch(error => {
+                    alert('Error calculating eligibility');
+                });
+        });
+    </script>
+
+    <div th:replace="fragments/footer :: footer"></div>
+</body>
+</html>

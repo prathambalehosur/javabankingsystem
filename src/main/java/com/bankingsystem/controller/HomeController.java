@@ -4,17 +4,18 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import com.bankingsystem.model.User;
+
 @Controller
 public class HomeController {
 
     @GetMapping("/")
-    public String home(Model model) {
-        model.addAttribute("title", "Home");
-        return "home";
+    public String home() {
+        return "index";
     }
     
     @GetMapping("/home")
-    public String homePage(Model model) {
-        return "redirect:/";
+    public String homePage() {
+        return "index";
     }
 }

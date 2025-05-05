@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking System - Transactions</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        .transaction-item {
+            transition: background-color 0.2s;
+        }
+        .transaction-item:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        .filter-card {
+            border-radius: 10px;
+        }
+        .date-range-inputs .form-control {
+            border-radius: 0;
+        }
+        .date-range-inputs .form-control:first-child {
+            border-top-left-radius: 0.25rem;
+            border-bottom-left-radius: 0.25rem;
+        }
+        .date-range-inputs .form-control:last-child {
+            border-top-right-radius: 0.25rem;
+            border-bottom-right-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-landmark me-2"></i>Banking System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/accounts">
+                            <i class="fas fa-wallet me-1"></i>Accounts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/transactions">
+                            <i class="fas fa-exchange-alt me-1"></i>Transactions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/loans">
+                            <i class="fas fa-hand-holding-usd me-1"></i>Loans
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile">
+                            <i class="fas fa-user me-1"></i><span th:text="${user != null ? user.username : 'Profile'}">Profile</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-exchange-alt me-2 text-primary"></i>Transactions
+            </h1>
+            <a href="/transactions/new" class="btn btn-primary">
+                <i class="fas fa-paper-plane me-2"></i>New Transfer
+            </a>
+        </div>
+        
+        <!-- Transaction Filters -->
+        <div class="card mb-4 shadow-sm filter-card">
+            <div class="card-body">
+                <form id="transactionFilterForm" method="get" action="/transactions">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="accountFilter" class="form-label">Account</label>
+                            <select class="form-select" id="accountFilter" name="account">
+                                <option value="">All Accounts</option>
+                                <option value="XXXX-1234">Primary Checking (XXXX-1234)</option>
+                                <option value="XXXX-5678">Savings Account (XXXX-5678)</option>
+                                <option value="XXXX-9012">Emergency Fund (XXXX-9012)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="typeFilter" class="form-label">Transaction Type</label>
+                            <select class="form-select" id="typeFilter" name="type">
+                                <option value="">All Types</option>
+                                <option value="DEPOSIT">Deposits</option>
+                                <option value="WITHDRAWAL">Withdrawals</option>
+                                <option value="TRANSFER">Transfers</option>
+                                <option value="PAYMENT">Payments</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="dateRangeFilter" class="form-label">Date Range</label>
+                            <div class="input-group date-range-inputs">
+                                <input type="date" class="form-control" id="startDate" name="startDate" placeholder="From">
+                                <input type="date" class="form-control" id="endDate" name="endDate" placeholder="To">
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Filter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Transaction List -->
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="/transactions/123" class="list-group-item list-group-item-action transaction-item">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <span class="fa-stack">
+                                            <i class="fas fa-circle fa-stack-2x text-success-subtle"></i>
+                                            <i class="fas fa-arrow-down fa-stack-1x text-success"></i>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Salary Deposit</h6>
+                                        <small class="text-muted">From: ABC Company</small>
+                                        <div class="text-muted">Primary Checking (XXXX-1234)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <h6 class="text-success mb-0">+$3,250.00</h6>
+                                <small class="text-muted">May 1, 2025</small>
+                                <div class="badge bg-success">Deposit</div>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="/transactions/124" class="list-group-item list-group-item-action transaction-item">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <span class="fa-stack">
+                                            <i class="fas fa-circle fa-stack-2x text-danger-subtle"></i>
+                                            <i class="fas fa-arrow-up fa-stack-1x text-danger"></i>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Grocery Shopping</h6>
+                                        <small class="text-muted">Supermarket XYZ</small>
+                                        <div class="text-muted">Primary Checking (XXXX-1234)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <h6 class="text-danger mb-0">-$125.40</h6>
+                                <small class="text-muted">May 3, 2025</small>
+                                <div class="badge bg-danger">Withdrawal</div>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="/transactions/125" class="list-group-item list-group-item-action transaction-item">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <span class="fa-stack">
+                                            <i class="fas fa-circle fa-stack-2x text-danger-subtle"></i>
+                                            <i class="fas fa-arrow-up fa-stack-1x text-danger"></i>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Utility Bill</h6>
+                                        <small class="text-muted">Electric Company</small>
+                                        <div class="text-muted">Primary Checking (XXXX-1234)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <h6 class="text-danger mb-0">-$85.20</h6>
+                                <small class="text-muted">May 5, 2025</small>
+                                <div class="badge bg-danger">Payment</div>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="/transactions/126" class="list-group-item list-group-item-action transaction-item">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <span class="fa-stack">
+                                            <i class="fas fa-circle fa-stack-2x text-primary-subtle"></i>
+                                            <i class="fas fa-exchange-alt fa-stack-1x text-primary"></i>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Transfer to Savings</h6>
+                                        <small class="text-muted">Primary Checking → Savings Account</small>
+                                        <div class="text-muted">XXXX-1234 → XXXX-5678</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <h6 class="text-primary mb-0">$500.00</h6>
+                                <small class="text-muted">May 7, 2025</small>
+                                <div class="badge bg-primary">Transfer</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer">
+                <nav aria-label="Transaction navigation">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-landmark me-2"></i>Banking System</h5>
+                    <p>A comprehensive banking solution for all your financial needs.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2025 Banking System. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
