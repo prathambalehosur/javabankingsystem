@@ -1,7 +1,9 @@
 package com.bankingsystem.controller;
 
+import com.bankingsystem.controller.form.LoanForm;
 import com.bankingsystem.model.Loan;
 import com.bankingsystem.model.Loan.LoanType;
+import com.bankingsystem.model.LoanPayment;
 import com.bankingsystem.model.User;
 import com.bankingsystem.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,12 +12,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 @Controller
 @RequestMapping("/loans")
@@ -69,27 +75,88 @@ public class LoanController {
     }
     
     @GetMapping("/calculator")
-    public String showLoanCalculator() {
+    public String showLoanCalculator(Model model) {
+        if (!model.containsAttribute("loanForm")) {
+            model.addAttribute("loanForm", new LoanForm());
+        }
         return "loans/calculator";
     }
     
     @PostMapping("/calculate")
-    @ResponseBody
     public String calculateLoan(
-            @RequestParam BigDecimal amount,
-            @RequestParam BigDecimal rate,
-            @RequestParam Integer termMonths) {
+            @Valid @ModelAttribute("loanForm") LoanForm loanForm,
+            BindingResult bindingResult,
+            Model model) {
         
-        // Simple EMI calculation formula
-        BigDecimal monthlyRate = rate.divide(BigDecimal.valueOf(1200), 10, RoundingMode.HALF_UP);
-        BigDecimal emi = amount.multiply(monthlyRate.multiply(
-                BigDecimal.ONE.add(monthlyRate).pow(termMonths)
-        )).divide(
-                BigDecimal.ONE.add(monthlyRate).pow(termMonths).subtract(BigDecimal.ONE),
-                2, RoundingMode.HALF_UP
-        );
+        if (bindingResult.hasErrors()) {
+            return "loans/calculator";
+        }
         
-        return emi.toString();
+        BigDecimal amount = loanForm.getAmount();
+        BigDecimal annualRate = loanForm.getInterestRate();
+        int termMonths = loanForm.getTermMonths();
+        
+        // Calculate monthly interest rate
+        BigDecimal monthlyRate = annualRate.divide(BigDecimal.valueOf(1200), 10, RoundingMode.HALF_UP);
+        
+        // Calculate EMI using the formula: P * r * (1 + r)^n / ((1 + r)^n - 1)
+        BigDecimal temp = monthlyRate.add(BigDecimal.ONE).pow(termMonths);
+        BigDecimal emi = amount.multiply(monthlyRate)
+                .multiply(temp)
+                .divide(temp.subtract(BigDecimal.ONE), 2, RoundingMode.HALF_UP);
+        
+        // Calculate total payment and total interest
+        BigDecimal totalPayment = emi.multiply(BigDecimal.valueOf(termMonths));
+        BigDecimal totalInterest = totalPayment.subtract(amount);
+        
+        // Generate amortization schedule
+        List<LoanPayment> amortizationSchedule = generateAmortizationSchedule(amount, annualRate, termMonths, emi);
+        
+        // Add results to the model
+        model.addAttribute("emi", emi);
+        model.addAttribute("totalPayment", totalPayment);
+        model.addAttribute("totalInterest", totalInterest);
+        model.addAttribute("amortizationSchedule", amortizationSchedule);
+        
+        return "loans/calculator";
+    }
+    
+    private List<LoanPayment> generateAmortizationSchedule(
+            BigDecimal principal, 
+            BigDecimal annualRate, 
+            int termMonths, 
+            BigDecimal emi) {
+        
+        List<LoanPayment> schedule = new ArrayList<>();
+        BigDecimal monthlyRate = annualRate.divide(BigDecimal.valueOf(1200), 10, RoundingMode.HALF_UP);
+        BigDecimal remainingBalance = principal;
+        
+        for (int i = 1; i <= termMonths; i++) {
+            BigDecimal interestForMonth = remainingBalance.multiply(monthlyRate).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal principalForMonth = emi.subtract(interestForMonth);
+            
+            // Adjust for the last payment to account for any rounding differences
+            if (i == termMonths) {
+                principalForMonth = remainingBalance;
+                remainingBalance = BigDecimal.ZERO;
+            } else {
+                remainingBalance = remainingBalance.subtract(principalForMonth);
+            }
+            
+            if (remainingBalance.compareTo(BigDecimal.ZERO) < 0) {
+                remainingBalance = BigDecimal.ZERO;
+            }
+            
+            schedule.add(new LoanPayment(
+                i,
+                emi,
+                principalForMonth,
+                interestForMonth,
+                remainingBalance
+            ));
+        }
+        
+        return schedule;
     }
     
     @GetMapping("/eligibility")

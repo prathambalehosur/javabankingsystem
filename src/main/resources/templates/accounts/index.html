@@ -107,7 +107,8 @@
                     </div>
                     <div class="col-md-4 text-center">
                         <h5>Last Transaction</h5>
-                        <h3 class="text-primary" th:text="${lastTransaction != null ? #dates.format(lastTransaction, 'dd MMM yyyy') : 'N/A'}">01 May 2025</h3>
+                        <h3 class="text-primary" th:if="${lastTransaction != null}" th:text="${#temporals.format(lastTransaction, 'dd MMM yyyy')}">01 May 2025</h3>
+                        <h3 class="text-primary" th:unless="${lastTransaction != null}">N/A</h3>
                     </div>
                 </div>
             </div>
@@ -120,13 +121,13 @@
                     <div class="card-body position-relative">
                         <span class="badge account-type-badge"
                               th:classappend="${account.accountType != null} ? 
-                                (account.accountType.name() == 'SAVINGS' ? ' bg-success' : 
-                                (account.accountType.name() == 'CHECKING' ? ' bg-primary' : 
-                                (account.accountType.name() == 'FIXED_DEPOSIT' ? ' bg-warning' : ' bg-secondary'))) : ' bg-secondary'"
-                              th:text="${account.accountType != null} ? ${account.accountType} : 'Unknown'">Account Type</span>
+                                (${account.accountType.name() == 'SAVINGS'} ? 'bg-success' : 
+                                (${account.accountType.name() == 'CHECKING'} ? 'bg-primary' : 
+                                (${account.accountType.name() == 'FIXED_DEPOSIT'} ? 'bg-warning' : 'bg-secondary'))) : 'bg-secondary'"
+                              th:text="${account.accountType != null ? account.accountType : 'Unknown'}">Account Type</span>
 
-                        <h5 class="card-title" th:text="${account.accountType != null} ? ${account.accountType} : 'Account'">Account Type</h5>
-                        <p class="account-number" th:text="${account.accountNumber != null} ? ${account.accountNumber} : 'N/A'">XXXX-XXXX-XXXX-1234</p>
+                        <h5 class="card-title" th:text="${account.accountType != null ? account.accountType : 'Account'}">Account Type</h5>
+                        <p class="account-number" th:text="${account.accountNumber != null ? account.accountNumber : 'N/A'}">XXXX-XXXX-XXXX-1234</p>
                         <p class="account-balance" th:text="${account.balance != null} ? ${#numbers.formatCurrency(account.balance)} : '$0.00'">$5,000.00</p>
                         
                         <div class="d-flex mt-3">

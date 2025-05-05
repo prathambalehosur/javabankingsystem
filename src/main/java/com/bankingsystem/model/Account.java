@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "accounts")
@@ -58,6 +60,20 @@ public class Account {
     @OneToMany(mappedBy = "destinationAccount", fetch = FetchType.LAZY)
     private List<Transaction> destinationTransactions;
     
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "account_joint_holders",
+        joinColumns = @JoinColumn(name = "account_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> jointHolders = new HashSet<>();
+    
+    @Column(name = "is_joint_account")
+    private boolean jointAccount = false;
+    
+    @Column(name = "account_name")
+    private String name;
+    
     public List<Transaction> getTransactions() {
         List<Transaction> allTransactions = new ArrayList<>();
         if (sourceTransactions != null) {
@@ -85,5 +101,10 @@ public class Account {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+    
+    // Helper method to check if a user is a joint holder
+    public boolean isJointHolder(User user) {
+        return jointHolders.contains(user);
     }
 }

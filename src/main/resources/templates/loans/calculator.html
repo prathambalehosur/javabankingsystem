@@ -2,6 +2,59 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Loan Calculator - Banking System</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        // Form validation
+        (function () {
+            'use strict'
+            
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.querySelectorAll('.needs-validation')
+            
+            // Loop over them and prevent submission
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+        
+        // Calculate EMI on form submission
+        document.getElementById('calculatorForm').addEventListener('submit', function(e) {
+            e.preventDefault()
+            
+            const amount = parseFloat(document.getElementById('amount').value)
+            const rate = parseFloat(document.getElementById('rate').value) / 100 / 12
+            const term = parseInt(document.getElementById('termMonths').value)
+            
+            if (isNaN(amount) || isNaN(rate) || isNaN(term)) return
+            
+            // Calculate EMI
+            const emi = amount * rate * Math.pow(1 + rate, term) / (Math.pow(1 + rate, term) - 1)
+            const totalPayment = emi * term
+            const totalInterest = totalPayment - amount
+            
+            // Update results
+            document.querySelector('.emi-amount').textContent = emi.toFixed(2)
+            document.querySelector('.total-interest').textContent = totalInterest.toFixed(2)
+            document.querySelector('.total-payment').textContent = totalPayment.toFixed(2)
+            
+            // Generate amortization data
+            generateAmortizationSchedule(amount, rate, term, emi)
+        })
+        
+        function generateAmortizationSchedule(principal, monthlyRate, term, emi) {
+            // Implementation for generating amortization schedule
+            // This can be enhanced with a chart or table
+            console.log('Generating amortization schedule...')
+        }
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 </head>
@@ -16,46 +69,101 @@
                         <h3 class="mb-0">Loan EMI Calculator</h3>
                     </div>
                     <div class="card-body">
-                        <form id="calculatorForm">
+                        <form id="calculatorForm" th:action="@{/loans/calculate}" th:object="${loanForm}" method="post" class="needs-validation" novalidate>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="amount" class="form-label">Loan Amount</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
                                         <input type="number" class="form-control" id="amount" 
-                                               step="0.01" min="0" required>
+                                               th:field="*{amount}" step="0.01" min="0" required>
+                                        <div class="invalid-feedback">
+                                            Please enter a valid loan amount.
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="rate" class="form-label">Interest Rate (%)</label>
                                     <input type="number" class="form-control" id="rate" 
-                                           step="0.01" min="0" required>
+                                           th:field="*{interestRate}" step="0.01" min="0" required>
+                                    <div class="invalid-feedback">
+                                        Please enter a valid interest rate.
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="termMonths" class="form-label">Loan Term (Months)</label>
                                 <input type="number" class="form-control" id="termMonths" 
-                                       min="1" required>
+                                       th:field="*{termMonths}" min="1" required>
+                                <div class="invalid-feedback">
+                                    Please enter a valid loan term.
+                                </div>
                             </div>
 
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-calculator"></i> Calculate EMI
                             </button>
                         </form>
+                        
+                        <!-- Add CSRF token for form submission -->
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        
+                        <!-- Add chart for amortization schedule -->
+                        <div class="mt-4" th:if="${emi != null}">
+                            <h5>Amortization Schedule</h5>
+                            <canvas id="amortizationChart" height="200"></canvas>
+                        </div>
 
                         <div class="mt-4">
                             <h4>Results</h4>
                             <div class="border p-3 rounded">
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <p><strong>Monthly EMI:</strong> <span id="emiResult">-</span></p>
+                                        <p class="mb-1">Monthly Payment (EMI):</p>
+                                        <h3 class="text-primary">
+                                            <span th:if="${emi != null}" th:text="${#numbers.formatCurrency(emi)}">$0.00</span>
+                                            <span th:unless="${emi != null}" class="text-muted">--</span>
+                                        </h3>
                                     </div>
                                     <div class="col-md-6">
-                                        <p><strong>Total Interest:</strong> <span id="totalInterest">-</span></p>
+                                        <p class="mb-1">Total Interest:</p>
+                                        <h3 class="text-primary">
+                                            <span th:if="${totalInterest != null}" th:text="${#numbers.formatCurrency(totalInterest)}">$0.00</span>
+                                            <span th:unless="${totalInterest != null}" class="text-muted">--</span>
+                                        </h3>
                                     </div>
-                                    <div class="col-md-6">
-                                        <p><strong>Total Amount:</strong> <span id="totalAmount">-</span></p>
+                                    <div class="col-12 mt-3">
+                                        <p class="mb-1">Total Payment (Principal + Interest):</p>
+                                        <h3 class="text-primary">
+                                            <span th:if="${totalPayment != null}" th:text="${#numbers.formatCurrency(totalPayment)}">$0.00</span>
+                                            <span th:unless="${totalPayment != null}" class="text-muted">--</span>
+                                        </h3>
+                                    </div>
+                                    <div class="col-12 mt-3" th:if="${amortizationSchedule != null}">
+                                        <h5 class="mt-3">Payment Schedule</h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Payment #</th>
+                                                        <th>Payment</th>
+                                                        <th>Principal</th>
+                                                        <th>Interest</th>
+                                                        <th>Remaining</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr th:each="payment : ${amortizationSchedule}">
+                                                        <td th:text="${payment.paymentNumber}"></td>
+                                                        <td th:text="${#numbers.formatCurrency(payment.payment)}"></td>
+                                                        <td th:text="${#numbers.formatCurrency(payment.principal)}"></td>
+                                                        <td th:text="${#numbers.formatCurrency(payment.interest)}"></td>
+                                                        <td th:text="${#numbers.formatCurrency(payment.remainingBalance)}"></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

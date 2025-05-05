@@ -3,9 +3,11 @@ package com.bankingsystem.controller;
 import com.bankingsystem.model.Account;
 import com.bankingsystem.model.Transaction;
 import com.bankingsystem.model.User;
+import com.bankingsystem.model.Account.AccountType;
 import com.bankingsystem.repository.AccountRepository;
 import com.bankingsystem.repository.UserRepository;
 import com.bankingsystem.service.AccountService;
+import com.bankingsystem.controller.form.AccountForm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,12 +15,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/accounts")
@@ -57,11 +63,19 @@ public class AccountController {
                     BigDecimal totalBalance = accounts.stream()
                             .map(Account::getBalance)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
-                    
+                    // Get the most recent transaction date if any
+                    LocalDateTime lastTransaction = accounts.stream()
+                        .flatMap(account -> account.getTransactions() != null ? account.getTransactions().stream() : null)
+                        .filter(Objects::nonNull)
+                        .map(Transaction::getTransactionDate)
+                        .filter(Objects::nonNull)
+                        .max(LocalDateTime::compareTo)
+                        .orElse(null);
+
                     model.addAttribute("user", user);
                     model.addAttribute("accounts", accounts);
                     model.addAttribute("totalBalance", totalBalance);
-                    model.addAttribute("lastTransaction", java.time.LocalDate.now());
+                    model.addAttribute("lastTransaction", lastTransaction);
                     
                     return "accounts/index";
                 } catch (Exception e) {
@@ -86,8 +100,9 @@ public class AccountController {
             
             if (user != null) {
                 model.addAttribute("user", user);
-                model.addAttribute("accountForm", new AccountForm());
-                
+                if (!model.containsAttribute("accountForm")) {
+                    model.addAttribute("accountForm", new AccountForm());
+                }
                 return "accounts/new";
             }
         }
@@ -96,12 +111,72 @@ public class AccountController {
     }
     
     @PostMapping("/new")
-    public String createNewAccount(@ModelAttribute("accountForm") AccountForm accountForm, Model model) {
-        // Here you would normally save the account to the database
-        // For now, just redirect to the accounts page
-        return "redirect:/accounts";
+    public String createAccount(
+            @Valid @ModelAttribute("accountForm") AccountForm accountForm,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes) {
+        
+        // Get the currently authenticated user
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof UserDetails)) {
+            return "redirect:/login";
+        }
+        
+        UserDetails userDetails = (UserDetails) auth.getPrincipal();
+        User user = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
+        if (user == null) {
+            return "redirect:/login";
+        }
+        
+        // Validate minimum deposit based on account type
+        if (accountForm.getType() != null && accountForm.getInitialDeposit() != null) {
+            if (accountForm.getType().equals("SAVINGS") && accountForm.getInitialDeposit().compareTo(new BigDecimal("100")) < 0) {
+                bindingResult.rejectValue("initialDeposit", "Min.initialDeposit", "Minimum deposit for Savings account is $100");
+            } else if (accountForm.getType().equals("CHECKING") && accountForm.getInitialDeposit().compareTo(new BigDecimal("50")) < 0) {
+                bindingResult.rejectValue("initialDeposit", "Min.initialDeposit", "Minimum deposit for Checking account is $50");
+            } else if (accountForm.getType().equals("FIXED_DEPOSIT") && accountForm.getInitialDeposit().compareTo(new BigDecimal("1000")) < 0) {
+                bindingResult.rejectValue("initialDeposit", "Min.initialDeposit", "Minimum deposit for Fixed Deposit is $1000");
+            }
+        }
+        
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.accountForm", bindingResult);
+            redirectAttributes.addFlashAttribute("accountForm", accountForm);
+            return "redirect:/accounts/new";
+        }
+        
+        try {
+            // Create the account with all provided information
+            AccountType accountType = AccountType.valueOf(accountForm.getType());
+            User secondaryUser = null;
+            
+            // Find secondary user if this is a joint account
+            if (accountForm.isJointAccount() && accountForm.getSecondaryOwner() != null && !accountForm.getSecondaryOwner().trim().isEmpty()) {
+                secondaryUser = userRepository.findByUsername(accountForm.getSecondaryOwner().trim())
+                        .orElseThrow(() -> new RuntimeException("Secondary user not found"));
+            }
+            
+            // Create the account with all information
+            Account account = accountService.createAccount(
+                user, 
+                accountType, 
+                accountForm.getInitialDeposit(),
+                accountForm.getName(),
+                accountForm.isJointAccount(),
+                secondaryUser
+            );
+            
+            redirectAttributes.addFlashAttribute("successMessage", "Account created successfully!");
+            return "redirect:/accounts";
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error creating account: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("accountForm", accountForm);
+            return "redirect:/accounts/new";
+        }
     }
     
+
     @GetMapping("/{accountNumber}")
     public String viewAccount(@PathVariable String accountNumber, Model model) {
         // Get the currently authenticated user
@@ -211,62 +286,5 @@ public class AccountController {
         return accounts;
     }
     
-    // Form class for creating new accounts
-    public static class AccountForm {
-        private String name;
-        private Account.AccountType accountType;
-        private BigDecimal initialDeposit;
-        private Integer term;
-        private Boolean jointAccount = false;
-        private String secondaryOwner;
-        
-        // Getters and setters
-        public String getName() {
-            return name;
-        }
-        
-        public void setName(String name) {
-            this.name = name;
-        }
-        
-        public Account.AccountType getAccountType() {
-            return accountType;
-        }
-        
-        public void setAccountType(Account.AccountType accountType) {
-            this.accountType = accountType;
-        }
-        
-        public BigDecimal getInitialDeposit() {
-            return initialDeposit;
-        }
-        
-        public void setInitialDeposit(BigDecimal initialDeposit) {
-            this.initialDeposit = initialDeposit;
-        }
-        
-        public Integer getTerm() {
-            return term;
-        }
-        
-        public void setTerm(Integer term) {
-            this.term = term;
-        }
-        
-        public Boolean getJointAccount() {
-            return jointAccount;
-        }
-        
-        public void setJointAccount(Boolean jointAccount) {
-            this.jointAccount = jointAccount;
-        }
-        
-        public String getSecondaryOwner() {
-            return secondaryOwner;
-        }
-        
-        public void setSecondaryOwner(String secondaryOwner) {
-            this.secondaryOwner = secondaryOwner;
-        }
-    }
+    // AccountForm is now in the com.bankingsystem.controller.form package
 }

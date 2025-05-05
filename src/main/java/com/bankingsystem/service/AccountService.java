@@ -52,6 +52,12 @@ public class AccountService {
      */
     @Transactional
     public Account createAccount(User user, AccountType accountType, BigDecimal initialDeposit) {
+        return createAccount(user, accountType, initialDeposit, null, false, null);
+    }
+    
+    @Transactional
+    public Account createAccount(User user, AccountType accountType, BigDecimal initialDeposit, 
+                               String accountName, boolean isJointAccount, User secondaryUser) {
         // Generate account number
         String accountNumber = generateAccountNumber();
         
@@ -73,6 +79,17 @@ public class AccountService {
         account.setBalance(initialDeposit);
         account.setUser(user);
         account.setActive(true);
+        account.setJointAccount(isJointAccount);
+        
+        // Set account name if provided
+        if (accountName != null && !accountName.trim().isEmpty()) {
+            account.setName(accountName.trim());
+        }
+        
+        // Add secondary user as joint holder if provided
+        if (isJointAccount && secondaryUser != null) {
+            account.getJointHolders().add(secondaryUser);
+        }
         
         Account savedAccount = accountRepository.save(account);
         
@@ -93,6 +110,28 @@ public class AccountService {
         }
         
         return savedAccount;
+    }
+    
+    /**
+     * Add a joint account holder to an existing account
+     * @param accountNumber The account number to add the joint holder to
+     * @param secondaryUser The user to add as a joint account holder
+     */
+    @Transactional
+    public void addJointAccountHolder(String accountNumber, User secondaryUser) {
+        Account account = getAccountByNumber(accountNumber);
+        if (account == null) {
+            throw new RuntimeException("Account not found");
+        }
+        
+        // Check if the secondary user is already a joint holder
+        if (account.getJointHolders().contains(secondaryUser)) {
+            throw new RuntimeException("User is already a joint holder of this account");
+        }
+        
+        // Add the secondary user as a joint holder
+        account.getJointHolders().add(secondaryUser);
+        accountRepository.save(account);
     }
     
     /**
